@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🐝 養蜂内見記録</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
+:root {
+  --honey:#E8930A; --honey-lt:#F5B942; --honey-dk:#B56D00;
+  --comb:#FFF8ED;  --comb-dk:#FFE9BC;
+  --dark:#3D2B00;  --mid:#7A5C1E; --soft:#A87C30;
+  --white:#FFFFFF;
+  --green:#2E7D32; --green-lt:#E8F5E9;
+  --red:#C0392B;   --red-lt:#FDECEA;
+  --blue:#1565C0;  --blue-lt:#E3F2FD;
+  --shadow:0 2px 16px rgba(180,120,0,0.10);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Zen Kaku Gothic New',sans-serif;background:#F7F3EC;color:var(--dark);min-height:100vh;padding-bottom:72px}
+
+/* ヘッダー */
+.header{background:var(--white);border-bottom:2px solid var(--comb-dk);padding:14px 18px 12px;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:10px;box-shadow:0 1px 8px rgba(180,120,0,0.08)}
+.header-icon{font-size:22px}
+.header-title{font-size:17px;font-weight:900;color:var(--dark)}
+.header-date{margin-left:auto;font-family:'DM Mono',monospace;font-size:12px;color:var(--soft);background:var(--comb);padding:3px 10px;border-radius:20px}
+
+/* モードタブ */
+.mode-tabs{display:flex;background:var(--white);padding:0 16px 12px;gap:8px;border-bottom:1px solid var(--comb-dk)}
+.mode-tab{flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--comb-dk);background:transparent;color:var(--soft);font-family:'Zen Kaku Gothic New',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.mode-tab.active{background:var(--honey);color:var(--white);border-color:var(--honey)}
+
+/* セクション */
+.section{display:none;padding:14px 14px 0;animation:fadeIn .2s ease}
+.section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* 音声 */
+.voice-panel{background:var(--white);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px;border:1px solid var(--comb-dk)}
+.voice-title{font-size:12px;font-weight:700;color:var(--soft);margin-bottom:10px;text-transform:uppercase;letter-spacing:.08em}
+.voice-btn{width:100%;padding:16px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--honey),var(--honey-dk));color:var(--white);font-family:'Zen Kaku Gothic New',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 3px 12px rgba(232,147,10,0.30)}
+.voice-btn.recording{background:linear-gradient(135deg,var(--red),#922B21);animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 3px 12px rgba(192,57,43,0.35)}50%{box-shadow:0 3px 24px rgba(192,57,43,0.6)}}
+.voice-text{margin-top:12px;padding:12px;background:var(--comb);border-radius:9px;min-height:70px;font-size:14px;line-height:1.7;color:var(--mid);border:1.5px solid var(--comb-dk)}
+.voice-text.placeholder{color:#C8A96A;font-style:italic}
+.ai-parse-btn{width:100%;margin-top:10px;padding:13px;border-radius:10px;border:1.5px solid var(--honey);background:var(--white);color:var(--honey-dk);font-family:'Zen Kaku Gothic New',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.ai-parse-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* フォームカード */
+.form-card{background:var(--white);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:12px;border:1px solid var(--comb-dk)}
+.form-card-title{font-size:12px;font-weight:700;color:var(--soft);margin-bottom:14px;text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:6px}
+.field-group{margin-bottom:13px}
+.field-label{font-size:12px;font-weight:700;color:var(--mid);margin-bottom:6px;display:block}
+.field-input{width:100%;padding:10px 13px;border-radius:9px;border:1.5px solid var(--comb-dk);background:var(--comb);font-family:'Zen Kaku Gothic New',sans-serif;font-size:15px;color:var(--dark);transition:border-color .2s;-webkit-appearance:none}
+.field-input:focus{outline:none;border-color:var(--honey);background:var(--white)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* トグル */
+.toggle-group{display:flex;gap:7px;flex-wrap:wrap}
+.toggle-btn{padding:9px 15px;border-radius:20px;border:1.5px solid var(--comb-dk);background:var(--white);font-family:'Zen Kaku Gothic New',sans-serif;font-size:13px;font-weight:700;color:var(--mid);cursor:pointer;transition:all .15s}
+.toggle-btn.on-yes{background:var(--green-lt);border-color:var(--green);color:var(--green)}
+.toggle-btn.on-no {background:var(--red-lt);border-color:var(--red);color:var(--red)}
+.toggle-btn.on-sel{background:var(--comb-dk);border-color:var(--honey-dk);color:var(--honey-dk)}
+.toggle-btn.on-blue{background:var(--blue-lt);border-color:var(--blue);color:var(--blue)}
+
+/* 数値 */
+.number-row{display:flex;align-items:center;gap:10px}
+.num-btn{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--honey);background:var(--white);color:var(--honey-dk);font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.num-btn:active{background:var(--honey);color:var(--white)}
+.num-display{flex:1;text-align:center;font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:var(--dark);background:var(--comb);border:1.5px solid var(--comb-dk);border-radius:9px;padding:6px 10px}
+
+/* 送信ボタン */
+.submit-btn{width:100%;padding:16px;border-radius:13px;border:none;background:linear-gradient(135deg,var(--honey-lt),var(--honey));color:var(--white);font-family:'Zen Kaku Gothic New',sans-serif;font-size:16px;font-weight:900;cursor:pointer;box-shadow:0 4px 16px rgba(232,147,10,0.35);margin-bottom:14px;letter-spacing:.02em}
+.submit-btn:disabled{opacity:.4}
+
+/* ログカード */
+.log-card{background:var(--white);border-radius:13px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow);border:1px solid var(--comb-dk);border-left:4px solid var(--honey)}
+.log-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.log-box-no{font-family:'DM Mono',monospace;font-size:17px;font-weight:500;color:var(--honey-dk)}
+.log-date{font-size:12px;color:var(--soft);font-family:'DM Mono',monospace}
+.log-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px}
+.tag{padding:3px 9px;border-radius:11px;font-size:11px;font-weight:700}
+.tag-green{background:var(--green-lt);color:var(--green)}
+.tag-red{background:var(--red-lt);color:var(--red)}
+.tag-gold{background:#FFF3D6;color:var(--honey-dk)}
+.tag-gray{background:#F0EDE6;color:var(--mid)}
+.tag-blue{background:var(--blue-lt);color:var(--blue)}
+.log-memo{font-size:13px;color:var(--mid);line-height:1.6}
+
+/* コードパネル */
+.code-panel{background:#F8F9FA;border:1px solid #DEE2E6;border-radius:14px;padding:16px;margin-bottom:14px}
+.code-title{color:var(--dark);font-size:13px;font-weight:700;margin-bottom:10px;letter-spacing:.04em}
+.code-block{background:#1E1E2E;border-radius:9px;padding:12px;overflow-x:auto;font-family:'DM Mono',monospace;font-size:11px;color:#A8D8A8;line-height:1.7;white-space:pre;max-height:260px;overflow-y:auto}
+.copy-btn{width:100%;margin-top:9px;padding:10px;border-radius:8px;border:1.5px solid var(--honey);background:var(--white);color:var(--honey-dk);font-family:'Zen Kaku Gothic New',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+
+/* ステップ */
+.step-card{background:var(--white);border-radius:13px;padding:16px;margin-bottom:10px;box-shadow:var(--shadow);display:flex;gap:13px;border:1px solid var(--comb-dk)}
+.step-num{width:34px;height:34px;border-radius:50%;background:var(--honey);color:var(--white);font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-body{flex:1}
+.step-title{font-size:14px;font-weight:700;margin-bottom:4px}
+.step-desc{font-size:13px;color:var(--mid);line-height:1.6}
+.step-desc a{color:var(--honey-dk);font-weight:700}
+
+/* API設定 */
+.api-section{background:var(--white);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow);border:1px solid var(--comb-dk)}
+.api-row{display:flex;gap:8px}
+.api-row .field-input{flex:1;font-size:12px}
+.api-save-btn{padding:10px 15px;border-radius:9px;border:none;background:var(--honey);color:var(--white);font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+.info-box{background:#FFFBF0;border:1.5px solid var(--comb-dk);border-radius:9px;padding:11px 13px;font-size:13px;color:var(--mid);line-height:1.7;margin-bottom:12px}
+.info-box strong{color:var(--honey-dk)}
+
+/* 天気バッジ */
+.weather-badge{display:inline-flex;align-items:center;gap:6px;background:var(--blue-lt);border:1px solid #90CAF9;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;color:var(--blue);margin-bottom:12px}
+
+/* 女王なし対応パネル */
+.queen-action-panel{display:none;background:var(--red-lt);border:1.5px solid #FFCDD2;border-radius:10px;padding:13px;margin-top:10px}
+.queen-action-panel.visible{display:block}
+.queen-other-input{display:none;margin-top:8px}
+.queen-other-input.visible{display:block}
+
+/* グラフ */
+.chart-container{position:relative;width:100%}
+
+/* サマリーテーブル */
+.summary-table{width:100%;border-collapse:collapse;font-size:13px}
+.summary-table th{background:var(--comb-dk);color:var(--mid);padding:7px 8px;text-align:center;font-weight:700;font-size:11px}
+.summary-table td{padding:8px 8px;text-align:center;border-bottom:1px solid var(--comb-dk);color:var(--dark)}
+.summary-table tr:last-child td{border-bottom:none}
+.summary-table tr:hover td{background:var(--comb)}
+
+/* 女王カレンダー */
+.qc-card{background:var(--white);border-radius:13px;padding:15px;margin-bottom:11px;box-shadow:var(--shadow);border:1px solid var(--comb-dk);border-left:4px solid var(--honey-dk)}
+.qc-card.past{border-left-color:#CCC;opacity:.65}
+.qc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px}
+.qc-box{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;color:var(--honey-dk)}
+.qc-delete{background:none;border:none;color:#CCC;font-size:17px;cursor:pointer;padding:0 4px}
+.qc-timeline{display:flex;flex-direction:column;gap:5px}
+.qc-event{display:flex;align-items:center;gap:9px;padding:7px 11px;border-radius:8px;font-size:13px}
+.qc-event.done{background:#F5F5F5;color:#999}
+.qc-event.today{background:#FFF3D6;border:1.5px solid var(--honey);font-weight:700}
+.qc-event.soon{background:var(--green-lt);color:var(--green);font-weight:700}
+.qc-event.future{background:var(--comb);color:var(--mid)}
+.qc-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.dot-done{background:#CCC} .dot-today{background:var(--honey)} .dot-soon{background:var(--green)} .dot-future{background:var(--comb-dk);border:1.5px solid var(--soft)}
+.qc-date{font-family:'DM Mono',monospace;font-size:11px;flex-shrink:0}
+.qc-label{flex:1}
+.qc-countdown{font-size:11px;color:var(--honey-dk);font-weight:700;margin-left:auto}
+
+/* ボトムナビ */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--comb-dk);display:flex;padding:6px 0 calc(6px + env(safe-area-inset-bottom));z-index:100;box-shadow:0 -1px 8px rgba(180,120,0,0.08)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 0;cursor:pointer;color:#CBA96A;transition:color .2s;border:none;background:none}
+.nav-item.active{color:var(--honey)}
+.nav-icon{font-size:19px}
+.nav-label{font-size:9px;font-weight:700;letter-spacing:.02em}
+
+/* トースト */
+.toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--dark);color:var(--honey-lt);padding:11px 22px;border-radius:100px;font-size:13px;font-weight:700;opacity:0;transition:all .25s;z-index:999;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.loading{display:inline-block;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-icon">🐝</span>
+  <span class="header-title">養蜂内見記録</span>
+  <span class="header-date" id="headerDate"></span>
+</div>
+<div class="mode-tabs">
+  <button class="mode-tab active" onclick="switchMode('voice')">🎙 音声入力</button>
+  <button class="mode-tab" onclick="switchMode('manual')">✏️ 手動入力</button>
+</div>
+
+<!-- ===== 入力セクション ===== -->
+<div class="section active" id="sec-input">
+
+  <!-- 音声入力モード -->
+  <div id="voiceMode">
+    <div class="voice-panel">
+      <div class="voice-title">🎙 音声でメモを入力</div>
+      <div id="weatherBadgeArea"></div>
+      <div class="info-box">
+        マイクボタンを押して話してください。<br>
+        例：「<strong>3番巣箱、二段、女王あり、産卵あり、育児枠5枚、蜜枠3枚、巣盛良好、給餌なし、デマリーなし、王台なし</strong>」
+      </div>
+      <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()">
+        <span>🎙</span><span id="voiceBtnText">タップして音声入力開始</span>
+      </button>
+      <div class="voice-text placeholder" id="voiceOutput">ここに認識した音声が表示されます...</div>
+      <button class="ai-parse-btn" id="aiParseBtn" onclick="parseWithAI()" disabled>
+        <span>✨</span> AIで解析してフォームに入力
+      </button>
+    </div>
+  </div>
+
+  <!-- 手動入力モード -->
+  <div id="manualMode" style="display:none">
+
+    <!-- 基本情報 -->
+    <div class="form-card">
+      <div class="form-card-title">📋 基本情報</div>
+      <div class="row2">
+        <div class="field-group">
+          <label class="field-label">内見日</label>
+          <input type="date" class="field-input" id="inspDate">
+        </div>
+        <div class="field-group">
+          <label class="field-label">巣箱 No.</label>
+          <select class="field-input" id="boxNo">
+            <option value="">選択</option>
+            <script>for(let i=1;i<=15;i++) document.write(`<option value="${i}">${i}番</option>`)</script>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">段数</label>
+        <div class="toggle-group">
+          <button class="toggle-btn" id="stage1" onclick="setToggle('stage','1段','stage1')">1段</button>
+          <button class="toggle-btn" id="stage2" onclick="setToggle('stage','2段','stage2')">2段</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 女王・産卵 -->
+    <div class="form-card">
+      <div class="form-card-title">👑 女王・産卵状況</div>
+      <div class="row2">
+        <div class="field-group">
+          <label class="field-label">女王の有無</label>
+          <div class="toggle-group">
+            <button class="toggle-btn" id="q_yes" onclick="onQueenToggle('あり')">あり</button>
+            <button class="toggle-btn" id="q_no"  onclick="onQueenToggle('なし')">なし</button>
+          </div>
+          <!-- 女王なし時の対応 -->
+          <div class="queen-action-panel" id="queenActionPanel">
+            <div class="field-label" style="margin-bottom:7px">⚠️ 女王なし時の対応</div>
+            <div class="toggle-group">
+              <button class="toggle-btn" id="qa_move"  onclick="setToggle('queenAction','移設','qa_move')">王台を移設</button>
+              <button class="toggle-btn" id="qa_leave" onclick="setToggle('queenAction','放置','qa_leave')">放置</button>
+              <button class="toggle-btn" id="qa_other" onclick="onQueenActionOther()">その他</button>
+            </div>
+            <div class="queen-other-input" id="queenOtherInput">
+              <input type="text" class="field-input" id="queenOtherText" placeholder="対応内容を入力..." style="margin-top:8px">
+            </div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">産卵</label>
+          <div class="toggle-group">
+            <button class="toggle-btn" id="egg_yes" onclick="setToggle('egg','あり','egg_yes')">あり</button>
+            <button class="toggle-btn" id="egg_no"  onclick="setToggle('egg','なし','egg_no')">なし</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 巣枠・巣盛 -->
+    <div class="form-card">
+      <div class="form-card-title">🍯 巣枠・巣盛状況</div>
+      <div class="field-group">
+        <label class="field-label">育児枠（枚）</label>
+        <div class="number-row">
+          <button class="num-btn" onclick="changeNum('brood',-1)">−</button>
+          <div class="num-display" id="broodNum">0</div>
+          <button class="num-btn" onclick="changeNum('brood',1)">＋</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">蜜枠（枚）</label>
+        <div class="number-row">
+          <button class="num-btn" onclick="changeNum('honey',-1)">−</button>
+          <div class="num-display" id="honeyNum">0</div>
+          <button class="num-btn" onclick="changeNum('honey',1)">＋</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">巣盛状況</label>
+        <div class="toggle-group">
+          <button class="toggle-btn" id="nest_good"     onclick="setToggle('nestCondition','良好','nest_good')">✅ 良好</button>
+          <button class="toggle-btn" id="nest_nochange" onclick="setToggle('nestCondition','進捗無し','nest_nochange')">➡️ 進捗無し</button>
+          <button class="toggle-btn" id="nest_bad"      onclick="setToggle('nestCondition','悪化','nest_bad')">⚠️ 悪化</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 管理操作 -->
+    <div class="form-card">
+      <div class="form-card-title">🔧 管理操作</div>
+      <div class="field-group">
+        <label class="field-label">給餌</label>
+        <div class="toggle-group">
+          <button class="toggle-btn" id="feed_yes" onclick="setToggle('feeding','実施','feed_yes')">実施</button>
+          <button class="toggle-btn" id="feed_no"  onclick="setToggle('feeding','なし','feed_no')">なし</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">デマリー実施</label>
+        <div class="toggle-group">
+          <button class="toggle-btn" id="dem_yes" onclick="setToggle('demary','実施','dem_yes')">実施</button>
+          <button class="toggle-btn" id="dem_no"  onclick="setToggle('demary','なし','dem_no')">なし</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">王台・王椀</label>
+        <div class="toggle-group">
+          <button class="toggle-btn" id="qc_none"  onclick="setToggle('qcell','なし','qc_none')">なし</button>
+          <button class="toggle-btn" id="qc_cup"   onclick="setToggle('qcell','王椀あり','qc_cup')">王椀あり</button>
+          <button class="toggle-btn" id="qc_cell"  onclick="setToggle('qcell','王台あり','qc_cell')">王台あり</button>
+          <button class="toggle-btn" id="qc_multi" onclick="setToggle('qcell','複数王台','qc_multi')">複数王台</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">その他メモ</label>
+        <textarea class="field-input" id="otherMemo" rows="3" placeholder="気になること、状態など" style="resize:none;line-height:1.6"></textarea>
+      </div>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitRecord()">📤 記録を送信する</button>
+  </div>
+</div>
+
+<!-- ===== 記録一覧 ===== -->
+<div class="section" id="sec-log">
+  <div style="padding:4px 0 12px;display:flex;justify-content:space-between;align-items:center">
+    <span style="font-weight:700;font-size:15px;color:var(--mid)">📋 内見記録</span>
+    <button onclick="loadLogs()" style="background:none;border:none;color:var(--honey-dk);font-weight:700;font-size:13px;cursor:pointer">更新 ↻</button>
+  </div>
+  <div id="logList"><div style="text-align:center;padding:40px;color:#C8A96A;font-size:14px">読み込み中...</div></div>
+</div>
+
+<!-- ===== グラフ ===== -->
+<div class="section" id="sec-graph">
+  <div style="padding:4px 0 12px;display:flex;justify-content:space-between;align-items:center">
+    <span style="font-weight:700;font-size:15px;color:var(--mid)">📊 分析</span>
+    <select class="field-input" id="graphBoxFilter" onchange="renderGraph()" style="width:auto;padding:6px 11px;font-size:13px">
+      <option value="all">全巣箱</option>
+    </select>
+  </div>
+  <!-- 1. 女王・産卵サマリーを最上部 -->
+  <div class="form-card">
+    <div class="form-card-title">👑 女王・産卵 状況サマリー</div>
+    <div id="queenSummary"></div>
+  </div>
+  <!-- 2. 育児枠推移 -->
+  <div class="form-card">
+    <div class="form-card-title">📈 育児枠・蜜枠の推移</div>
+    <div class="chart-container"><canvas id="broodChart" height="220"></canvas></div>
+  </div>
+  <!-- 3. 巣箱別棒グラフ -->
+  <div class="form-card">
+    <div class="form-card-title">🍯 巣箱別 直近の育児枠数</div>
+    <div class="chart-container"><canvas id="boxBarChart" height="200"></canvas></div>
+  </div>
+</div>
+
+<!-- ===== 女王育成カレンダー ===== -->
+<div class="section" id="sec-queen">
+  <div style="padding:4px 0 12px">
+    <span style="font-weight:700;font-size:15px;color:var(--mid)">👑 女王育成カレンダー</span>
+  </div>
+  <div class="form-card">
+    <div class="form-card-title">➕ 王台確認を登録</div>
+    <div class="row2">
+      <div class="field-group">
+        <label class="field-label">巣箱 No.</label>
+        <select class="field-input" id="qcBoxNo">
+          <option value="">選択</option>
+          <script>for(let i=1;i<=15;i++) document.write(`<option value="${i}">${i}番</option>`)</script>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">王台確認日</label>
+        <input type="date" class="field-input" id="qcDate">
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">王台タイプ</label>
+      <div class="toggle-group">
+        <button class="toggle-btn" id="qct_cell"      onclick="setQcType('王台')">王台</button>
+        <button class="toggle-btn" id="qct_cup"       onclick="setQcType('王椀')">王椀</button>
+        <button class="toggle-btn" id="qct_emergency" onclick="setQcType('緊急王台')">緊急王台</button>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">メモ</label>
+      <input type="text" class="field-input" id="qcMemo" placeholder="王台数、場所など">
+    </div>
+    <button class="submit-btn" style="margin-bottom:0" onclick="addQueenEvent()">👑 カレンダーに追加</button>
+  </div>
+  <div id="queenCalendarList"></div>
+</div>
+
+<!-- ===== 設定 ===== -->
+<div class="section" id="sec-setup">
+  <div style="background:#FFF3D6;border:1.5px solid var(--comb-dk);border-radius:12px;padding:14px;margin-bottom:12px">
+    <div style="font-weight:700;font-size:13px;color:var(--honey-dk);margin-bottom:6px">⚠️ 他の端末から記録が見えない場合</div>
+    <div style="font-size:13px;color:var(--mid);line-height:1.7">GASのデプロイ設定で「アクセスできるユーザー」を<strong>「全員（匿名を含む）」</strong>にしてください。<br>変更後は「新しいデプロイ」が必要です。URLが変わるので設定タブに再入力してください。</div>
+  </div>
+  <div class="form-card">
+    <div class="form-card-title">⚙️ APIキー・URL設定</div>
+    <div class="field-group">
+      <label class="field-label">Claude APIキー</label>
+      <div class="api-row">
+        <input type="password" class="field-input" id="apiKeyInput2" placeholder="sk-ant-api03-...">
+        <button class="api-save-btn" onclick="saveApiKey2()">保存</button>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">GAS WebアプリURL</label>
+      <div class="api-row">
+        <input type="text" class="field-input" id="gasUrlInput2" placeholder="https://script.google.com/macros/s/...">
+        <button class="api-save-btn" onclick="saveGasUrl2()">保存</button>
+      </div>
+    </div>
+  </div>
+  <div class="form-card">
+    <div class="form-card-title">🚀 セットアップ手順</div>
+    <div class="step-card"><div class="step-num">1</div><div class="step-body"><div class="step-title">Googleスプレッドシートを作成</div><div class="step-desc"><a href="https://sheets.google.com" target="_blank">sheets.google.com</a> で新規作成。</div></div></div>
+    <div class="step-card"><div class="step-num">2</div><div class="step-body"><div class="step-title">GASを作成してコードを貼り付け</div><div class="step-desc">スプレッドシート → 拡張機能 → Apps Script → 下のコードをコピペして保存。</div></div></div>
+    <div class="step-card"><div class="step-num">3</div><div class="step-body"><div class="step-title">Webアプリとしてデプロイ</div><div class="step-desc">GASで「デプロイ」→「新しいデプロイ」→ 種類:Webアプリ → アクセス:全員 → URLをコピーして上の欄に入力。</div></div></div>
+    <div class="step-card"><div class="step-num">4</div><div class="step-body"><div class="step-title">Claude APIキーを取得</div><div class="step-desc"><a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> でアカウント作成 → APIキーを発行 → 上の欄に入力。</div></div></div>
+  </div>
+  <div class="code-panel">
+    <div class="code-title">📄 GASコード（コピーして貼り付け）</div>
+    <div class="code-block" id="gasCode"></div>
+    <button class="copy-btn" onclick="copyGasCode()">📋 コードをコピー</button>
+  </div>
+</div>
+
+<!-- ボトムナビ -->
+<div class="bottom-nav">
+  <button class="nav-item active" id="nav-input" onclick="switchSection('input')"><span class="nav-icon">🐝</span><span class="nav-label">入力</span></button>
+  <button class="nav-item" id="nav-log"   onclick="switchSection('log')"  ><span class="nav-icon">📋</span><span class="nav-label">記録</span></button>
+  <button class="nav-item" id="nav-graph" onclick="switchSection('graph')" ><span class="nav-icon">📊</span><span class="nav-label">グラフ</span></button>
+  <button class="nav-item" id="nav-queen" onclick="switchSection('queen')" ><span class="nav-icon">👑</span><span class="nav-label">女王</span></button>
+  <button class="nav-item" id="nav-setup" onclick="switchSection('setup')" ><span class="nav-icon">⚙️</span><span class="nav-label">設定</span></button>
+</div>
+
+<!-- ===== 修正モーダル ===== -->
+<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;align-items:flex-end;justify-content:center">
+  <div style="background:var(--white);border-radius:20px 20px 0 0;width:100%;max-width:500px;padding:20px 18px 36px;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="font-size:16px;font-weight:900;color:var(--dark)">✏️ 記録を修正</span>
+      <button onclick="closeEditModal()" style="background:none;border:none;font-size:22px;color:#AAA;cursor:pointer">✕</button>
+    </div>
+    <div class="row2">
+      <div class="field-group"><label class="field-label">内見日</label><input type="date" class="field-input" id="em_date"></div>
+      <div class="field-group"><label class="field-label">巣箱No</label>
+        <select class="field-input" id="em_boxNo"><option value="">選択</option>
+          <script>for(let i=1;i<=15;i++) document.write(`<option value="${i}">${i}番</option>`)</script>
+        </select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field-group"><label class="field-label">段数</label>
+        <select class="field-input" id="em_stage"><option value="">—</option><option>1段</option><option>2段</option></select>
+      </div>
+      <div class="field-group"><label class="field-label">女王</label>
+        <select class="field-input" id="em_queen"><option value="">—</option><option>あり</option><option>なし</option></select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field-group"><label class="field-label">産卵</label>
+        <select class="field-input" id="em_egg"><option value="">—</option><option>あり</option><option>なし</option></select>
+      </div>
+      <div class="field-group"><label class="field-label">巣盛</label>
+        <select class="field-input" id="em_nest"><option value="">—</option><option>良好</option><option>進捗無し</option><option>悪化</option></select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field-group"><label class="field-label">育児枠（枚）</label><input type="number" min="0" max="20" class="field-input" id="em_brood"></div>
+      <div class="field-group"><label class="field-label">蜜枠（枚）</label><input type="number" min="0" max="20" class="field-input" id="em_honey"></div>
+    </div>
+    <div class="row2">
+      <div class="field-group"><label class="field-label">給餌</label>
+        <select class="field-input" id="em_feed"><option value="">—</option><option>実施</option><option>なし</option></select>
+      </div>
+      <div class="field-group"><label class="field-label">デマリー</label>
+        <select class="field-input" id="em_demary"><option value="">—</option><option>実施</option><option>なし</option></select>
+      </div>
+    </div>
+    <div class="field-group"><label class="field-label">王台状況</label>
+      <select class="field-input" id="em_qcell"><option value="">—</option><option>なし</option><option>王椀あり</option><option>王台あり</option><option>複数王台</option></select>
+    </div>
+    <div class="field-group"><label class="field-label">その他メモ</label>
+      <textarea class="field-input" id="em_memo" rows="3" style="resize:none;line-height:1.6"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button onclick="closeEditModal()" style="flex:1;padding:14px;border-radius:12px;border:1.5px solid var(--comb-dk);background:var(--white);color:var(--mid);font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:15px;cursor:pointer">キャンセル</button>
+      <button onclick="saveEdit()" style="flex:2;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--honey-lt),var(--honey));color:var(--white);font-family:'Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:15px;cursor:pointer">💾 保存する</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== 共通設定（ここに入力すれば2人とも設定不要）=====
+const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwaoOFv6KC-Fb3tjduPbUPLuy3P6TW6fC4eZ9YSRQuHsFUgyL9hDcr1fHMqFjymY8SC/exec';
+const DEFAULT_API_KEY = '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';
+
+// ===== 状態管理 =====
+const state = {
+  stage:'', queen:'', egg:'', demary:'', qcell:'',
+  brood:0, honey:0,
+  nestCondition:'', feeding:'', queenAction:''
+};
+let recognition=null, isRecording=false;
+let weatherData={weather:'',temp:'',icon:'🌤'};
+let broodChartInst=null, boxBarChartInst=null;
+
+// ===== 初期化 =====
+document.addEventListener('DOMContentLoaded',()=>{
+  const today=new Date();
+  const mm=String(today.getMonth()+1).padStart(2,'0');
+  const dd=String(today.getDate()).padStart(2,'0');
+  const todayStr=`${today.getFullYear()}-${mm}-${dd}`;
+  document.getElementById('inspDate').value=todayStr;
+  document.getElementById('qcDate').value=todayStr;
+  document.getElementById('headerDate').textContent=`${mm}/${dd}`;
+  // DEFAULT値が設定されていればlocalStorageに自動セット
+  if(DEFAULT_GAS_URL && !localStorage.getItem('gasUrl'))   localStorage.setItem('gasUrl', DEFAULT_GAS_URL);
+  if(DEFAULT_API_KEY && !localStorage.getItem('claudeApiKey')) localStorage.setItem('claudeApiKey', DEFAULT_API_KEY);
+  if(DEFAULT_GAS_URL) localStorage.setItem('gasUrl', DEFAULT_GAS_URL);
+  if(DEFAULT_API_KEY) localStorage.setItem('claudeApiKey', DEFAULT_API_KEY);
+  const sk=localStorage.getItem('claudeApiKey');
+  const su=localStorage.getItem('gasUrl');
+  if(sk) document.getElementById('apiKeyInput2').value=sk;
+  if(su) document.getElementById('gasUrlInput2').value=su;
+  document.getElementById('gasCode').textContent=getGasCode();
+  setupSpeechRecognition();
+  fetchWeather();
+  loadLogs();
+});
+
+// ===== セクション切り替え =====
+function switchSection(name){
+  ['input','log','graph','queen','setup'].forEach(s=>{
+    const sec=document.getElementById(`sec-${s}`);
+    const nav=document.getElementById(`nav-${s}`);
+    if(sec) sec.classList.remove('active');
+    if(nav) nav.classList.remove('active');
+  });
+  document.getElementById(`sec-${name}`).classList.add('active');
+  document.getElementById(`nav-${name}`).classList.add('active');
+  if(name==='log') loadLogs();
+  if(name==='graph'){renderQueenSummary();renderGraph();}
+  if(name==='queen') renderQueenCalendar();
+}
+
+function switchMode(mode){
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('voiceMode').style.display=mode==='voice'?'block':'none';
+  document.getElementById('manualMode').style.display=mode==='manual'?'block':'none';
+}
+
+// ===== トグル =====
+function setToggle(key,val,btnId){
+  state[key]=val;
+  const group=document.getElementById(btnId).closest('.toggle-group');
+  group.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('on-yes','on-no','on-sel','on-blue'));
+  const btn=document.getElementById(btnId);
+  if(['あり','実施','良好'].includes(val)) btn.classList.add('on-yes');
+  else if(['なし','悪化'].includes(val))   btn.classList.add('on-no');
+  else                                      btn.classList.add('on-sel');
+}
+
+// ===== 女王トグル（なし時パネル表示）=====
+function onQueenToggle(val){
+  state.queen=val;
+  const yes=document.getElementById('q_yes');
+  const no =document.getElementById('q_no');
+  yes.classList.remove('on-yes','on-no','on-sel');
+  no .classList.remove('on-yes','on-no','on-sel');
+  if(val==='あり'){ yes.classList.add('on-yes'); document.getElementById('queenActionPanel').classList.remove('visible'); }
+  else            { no .classList.add('on-no');  document.getElementById('queenActionPanel').classList.add('visible'); }
+}
+
+function onQueenActionOther(){
+  setToggle('queenAction','その他','qa_other');
+  document.getElementById('queenOtherInput').classList.add('visible');
+}
+
+// ===== 数値 =====
+function changeNum(key,delta){
+  const ids={brood:'broodNum',honey:'honeyNum'};
+  state[key]=Math.max(0,state[key]+delta);
+  document.getElementById(ids[key]).textContent=state[key];
+}
+
+// ===== 音声認識 =====
+function setupSpeechRecognition(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){document.getElementById('voiceBtn').innerHTML='<span>⚠️</span> Chrome推奨（音声非対応）';return;}
+  recognition=new SR(); recognition.lang='ja-JP'; recognition.interimResults=true; recognition.continuous=true;
+  recognition.onresult=e=>{
+    let t=''; for(let i=0;i<e.results.length;i++) t+=e.results[i][0].transcript;
+    const el=document.getElementById('voiceOutput');
+    el.textContent=t; el.classList.remove('placeholder');
+    document.getElementById('aiParseBtn').disabled=!t.trim();
+  };
+  recognition.onerror=()=>stopVoice();
+  recognition.onend=()=>{if(isRecording)stopVoice();};
+}
+function toggleVoice(){isRecording?stopVoice():startVoice();}
+function startVoice(){if(!recognition)return;isRecording=true;recognition.start();document.getElementById('voiceBtn').classList.add('recording');document.getElementById('voiceBtnText').textContent='録音中… タップで停止';}
+function stopVoice(){isRecording=false;if(recognition)recognition.stop();document.getElementById('voiceBtn').classList.remove('recording');document.getElementById('voiceBtnText').textContent='タップして音声入力開始';}
+
+// ===== AI解析 =====
+async function parseWithAI(){
+  const apiKey=localStorage.getItem('claudeApiKey');
+  if(!apiKey){showToast('⚠️ 設定タブでAPIキーを設定してください');return;}
+  const text=document.getElementById('voiceOutput').textContent;
+  if(!text||text.includes('ここに認識した'))return;
+  const btn=document.getElementById('aiParseBtn');
+  btn.disabled=true; btn.innerHTML='<span class="loading">⏳</span> AIが解析中...';
+  try{
+    const prompt=`以下の養蜂内見メモを解析してJSON形式で返してください。
+メモ：「${text}」
+返すJSONのキーのみ（不明はnull）：
+{"boxNo":巣箱番号(数字),"stage":"1段"or"2段","queen":"あり"or"なし","egg":"あり"or"なし","brood":育児枠数,"honey":蜜枠数,"nestCondition":"良好"or"進捗無し"or"悪化","feeding":"実施"or"なし","demary":"実施"or"なし","qcell":"なし"or"王椀あり"or"王台あり"or"複数王台","queenAction":"移設"or"放置"or"その他"or null,"memo":その他メモ}
+JSONのみ返してください。`;
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const raw=data.content[0].text.replace(/```json|```/g,'').trim();
+    applyParsedData(JSON.parse(raw));
+    document.querySelectorAll('.mode-tab')[1].click();
+    showToast('✅ AI解析完了！内容を確認してください');
+  }catch(e){showToast('❌ 解析エラー。APIキーを確認してください');console.error(e);}
+  btn.disabled=false; btn.innerHTML='<span>✨</span> AIで解析してフォームに入力';
+}
+
+function applyParsedData(d){
+  if(d.boxNo) document.getElementById('boxNo').value=d.boxNo;
+  if(d.stage==='1段') setToggle('stage','1段','stage1');
+  if(d.stage==='2段') setToggle('stage','2段','stage2');
+  if(d.queen==='あり') onQueenToggle('あり');
+  if(d.queen==='なし') onQueenToggle('なし');
+  if(d.egg==='あり') setToggle('egg','あり','egg_yes');
+  if(d.egg==='なし') setToggle('egg','なし','egg_no');
+  if(d.brood!=null){state.brood=d.brood;document.getElementById('broodNum').textContent=d.brood;}
+  if(d.honey!=null){state.honey=d.honey;document.getElementById('honeyNum').textContent=d.honey;}
+  if(d.nestCondition){const m={'良好':'nest_good','進捗無し':'nest_nochange','悪化':'nest_bad'};if(m[d.nestCondition])setToggle('nestCondition',d.nestCondition,m[d.nestCondition]);}
+  if(d.feeding==='実施') setToggle('feeding','実施','feed_yes');
+  if(d.feeding==='なし')  setToggle('feeding','なし','feed_no');
+  if(d.demary==='実施') setToggle('demary','実施','dem_yes');
+  if(d.demary==='なし')  setToggle('demary','なし','dem_no');
+  if(d.qcell){const m={'なし':'qc_none','王椀あり':'qc_cup','王台あり':'qc_cell','複数王台':'qc_multi'};if(m[d.qcell])setToggle('qcell',d.qcell,m[d.qcell]);}
+  if(d.memo) document.getElementById('otherMemo').value=d.memo;
+}
+
+// ===== 天気取得 =====
+async function fetchWeather(){
+  try{
+    const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:5000}));
+    const {latitude:lat,longitude:lon}=pos.coords;
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode&timezone=Asia%2FTokyo`);
+    const d=await r.json();
+    const wInfo=weatherCodeToText(d.current.weathercode);
+    const temp=Math.round(d.current.temperature_2m);
+    weatherData={weather:wInfo.text,temp,icon:wInfo.icon};
+    const badge=document.createElement('div');
+    badge.className='weather-badge';
+    badge.innerHTML=`${wInfo.icon} ${wInfo.text}・${temp}℃`;
+    document.getElementById('weatherBadgeArea').appendChild(badge);
+  }catch(e){}
+}
+function weatherCodeToText(c){
+  if(c===0) return{text:'快晴',icon:'☀️'};
+  if(c<=2)  return{text:'晴れ',icon:'🌤'};
+  if(c<=3)  return{text:'曇り',icon:'☁️'};
+  if(c<=49) return{text:'霧',  icon:'🌫'};
+  if(c<=59) return{text:'霧雨',icon:'🌦'};
+  if(c<=69) return{text:'雨',  icon:'🌧'};
+  if(c<=79) return{text:'雪',  icon:'❄️'};
+  if(c<=82) return{text:'強雨',icon:'⛈'};
+  return{text:'雷雨',icon:'⛈'};
+}
+
+// ===== 送信 =====
+async function submitRecord(){
+  const date=document.getElementById('inspDate').value;
+  const boxNo=document.getElementById('boxNo').value;
+  if(!date||!boxNo){showToast('⚠️ 日付と巣箱Noは必須です');return;}
+  const queenActionFinal = state.queenAction==='その他'
+    ? (document.getElementById('queenOtherText').value||'その他')
+    : state.queenAction;
+  const record={
+    date,boxNo,
+    stage:state.stage, queen:state.queen, egg:state.egg,
+    brood:state.brood, honey:state.honey,
+    nestCondition:state.nestCondition,
+    feeding:state.feeding,
+    demary:state.demary, qcell:state.qcell,
+    queenAction:queenActionFinal,
+    weather:weatherData.weather, temp:weatherData.temp,
+    memo:document.getElementById('otherMemo').value,
+    timestamp:new Date().toISOString()
+  };
+  const logs=JSON.parse(localStorage.getItem('beeLogs')||'[]');
+  logs.unshift(record);
+  localStorage.setItem('beeLogs',JSON.stringify(logs));
+  const gasUrl=localStorage.getItem('gasUrl');
+  if(gasUrl){
+    const btn=document.getElementById('submitBtn');
+    btn.disabled=true; btn.innerHTML='<span class="loading">⏳</span> 送信中...';
+    try{
+      await fetch(gasUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(record)});
+      showToast('✅ スプレッドシートに送信しました！');
+    }catch(e){showToast('⚠️ ローカル保存済。GAS送信失敗');}
+    btn.disabled=false; btn.innerHTML='📤 記録を送信する';
+  }else{showToast('✅ ローカルに保存しました');}
+  resetForm();
+}
+
+function resetForm(){
+  document.getElementById('boxNo').value='';
+  document.getElementById('otherMemo').value='';
+  document.getElementById('queenOtherText').value='';
+  state.brood=0;state.honey=0;
+  state.stage=state.queen=state.egg=state.demary=state.qcell='';
+  state.nestCondition=state.feeding=state.queenAction='';
+  document.getElementById('broodNum').textContent='0';
+  document.getElementById('honeyNum').textContent='0';
+  document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('on-yes','on-no','on-sel','on-blue'));
+  document.getElementById('queenActionPanel').classList.remove('visible');
+  document.getElementById('queenOtherInput').classList.remove('visible');
+}
+
+// ===== ログ表示（GAS優先）=====
+async function loadLogs(){
+  const el=document.getElementById('logList');
+  el.innerHTML='<div style="text-align:center;padding:40px;color:#C8A96A;font-size:14px"><span class="loading">⏳</span> 読み込み中...</div>';
+  const gasUrl=localStorage.getItem('gasUrl');
+  if(gasUrl){
+    try{
+      const res=await fetch(gasUrl+'?type=logs',{method:'GET'});
+      const json=await res.json();
+      const rows=json['内見ログ']||[];
+      if(rows.length>1){
+        const headers=rows[0];
+        const logs=rows.slice(1).map(row=>{
+          const obj={};
+          headers.forEach((h,i)=>obj[h]=row[i]);
+          return{
+            date:obj['内見日']||'', boxNo:obj['巣箱No']||'',
+            stage:obj['段数']||'', queen:obj['女王']||'', egg:obj['産卵']||'',
+            brood:obj['育児枠']||0, honey:obj['蜜枠']||0,
+            nestCondition:obj['巣盛']||'',
+            feeding:obj['給餌']||'',
+            demary:obj['デマリー']||'', qcell:obj['王台状況']||'',
+            queenAction:obj['女王なし対応']||'',
+            weather:obj['天気']||'', temp:obj['気温(℃)']||'',
+            memo:obj['その他メモ']||''
+          };
+        }).reverse();
+        localStorage.setItem('beeLogs',JSON.stringify(logs));
+        renderLogCards(logs); return;
+      }
+    }catch(e){}
+  }
+  const logs=JSON.parse(localStorage.getItem('beeLogs')||'[]');
+  if(!logs.length){
+    el.innerHTML='<div style="text-align:center;padding:40px;color:#C8A96A;font-size:14px">まだ記録がありません<br><span style="font-size:12px">⚙️設定タブでGAS URLを登録すると2人で共有できます</span></div>';
+    return;
+  }
+  renderLogCards(logs);
+}
+
+// ===== ログ削除・修正モーダル =====
+let editingIndex = null;
+let currentLogs  = [];
+
+function deleteLog(idx){
+  if(!confirm(`${currentLogs[idx].date} / ${currentLogs[idx].boxNo}番の記録を削除しますか？`)) return;
+  currentLogs.splice(idx,1);
+  localStorage.setItem('beeLogs', JSON.stringify(currentLogs));
+  showToast('🗑 削除しました');
+  renderLogCards(currentLogs);
+  // GAS側削除は未対応のためスプレッドシートから手動削除が必要
+}
+
+function openEditModal(idx){
+  editingIndex = idx;
+  const r = currentLogs[idx];
+  const m = document.getElementById('editModal');
+  document.getElementById('em_date').value   = String(r.date).slice(0,10);
+  document.getElementById('em_boxNo').value  = r.boxNo;
+  document.getElementById('em_stage').value  = r.stage||'';
+  document.getElementById('em_queen').value  = r.queen||'';
+  document.getElementById('em_egg').value    = r.egg||'';
+  document.getElementById('em_brood').value  = r.brood||0;
+  document.getElementById('em_honey').value  = r.honey||0;
+  document.getElementById('em_nest').value   = r.nestCondition||'';
+  document.getElementById('em_feed').value   = r.feeding||'';
+  document.getElementById('em_demary').value = r.demary||'';
+  document.getElementById('em_qcell').value  = r.qcell||'';
+  document.getElementById('em_memo').value   = r.memo||'';
+  m.style.display='flex';
+}
+function closeEditModal(){ document.getElementById('editModal').style.display='none'; editingIndex=null; }
+
+function saveEdit(){
+  if(editingIndex===null) return;
+  const r = currentLogs[editingIndex];
+  r.date          = document.getElementById('em_date').value;
+  r.boxNo         = document.getElementById('em_boxNo').value;
+  r.stage         = document.getElementById('em_stage').value;
+  r.queen         = document.getElementById('em_queen').value;
+  r.egg           = document.getElementById('em_egg').value;
+  r.brood         = Number(document.getElementById('em_brood').value)||0;
+  r.honey         = Number(document.getElementById('em_honey').value)||0;
+  r.nestCondition = document.getElementById('em_nest').value;
+  r.feeding       = document.getElementById('em_feed').value;
+  r.demary        = document.getElementById('em_demary').value;
+  r.qcell         = document.getElementById('em_qcell').value;
+  r.memo          = document.getElementById('em_memo').value;
+  r.edited        = new Date().toISOString();
+  currentLogs[editingIndex] = r;
+  localStorage.setItem('beeLogs', JSON.stringify(currentLogs));
+  showToast('✅ 修正を保存しました（スプレッドシートも要確認）');
+  closeEditModal();
+  renderLogCards(currentLogs);
+}
+
+function renderLogCards(logs){
+  currentLogs = logs;
+  const el=document.getElementById('logList');
+  if(!logs.length){el.innerHTML='<div style="text-align:center;padding:40px;color:#C8A96A;font-size:14px">まだ記録がありません</div>';return;}
+  const nestIcon={'良好':'✅','進捗無し':'➡️','悪化':'⚠️'};
+  el.innerHTML=logs.slice(0,50).map((r,i)=>`
+    <div class="log-card">
+      <div class="log-header">
+        <div class="log-box-no">🐝 ${r.boxNo}番巣箱</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="log-date">${String(r.date).slice(0,10)}</div>
+          <button onclick="openEditModal(${i})" style="background:none;border:1px solid var(--comb-dk);border-radius:6px;padding:2px 8px;font-size:11px;color:var(--soft);cursor:pointer">✏️</button>
+          <button onclick="deleteLog(${i})"     style="background:none;border:1px solid #FFCDD2;border-radius:6px;padding:2px 8px;font-size:11px;color:var(--red);cursor:pointer">🗑</button>
+        </div>
+      </div>
+      <div class="log-tags">
+        ${r.stage?`<span class="tag tag-gray">${r.stage}</span>`:''}
+        ${r.queen==='あり'?'<span class="tag tag-green">女王✓</span>':r.queen==='なし'?'<span class="tag tag-red">女王×</span>':''}
+        ${r.egg==='あり'?'<span class="tag tag-green">産卵✓</span>':r.egg==='なし'?'<span class="tag tag-red">産卵×</span>':''}
+        ${Number(r.brood)>0?`<span class="tag tag-gold">育児${r.brood}枚</span>`:''}
+        ${Number(r.honey)>0?`<span class="tag tag-gold">蜜${r.honey}枚</span>`:''}
+        ${r.nestCondition?`<span class="tag ${r.nestCondition==='良好'?'tag-green':r.nestCondition==='悪化'?'tag-red':'tag-gray'}">${nestIcon[r.nestCondition]||''}巣盛${r.nestCondition}</span>`:''}
+        ${r.feeding==='実施'?'<span class="tag tag-blue">給餌✓</span>':''}
+        ${r.demary==='実施'?'<span class="tag tag-gray">デマリー実施</span>':''}
+        ${r.qcell&&r.qcell!=='なし'?`<span class="tag tag-red">⚠️${r.qcell}</span>`:''}
+        ${r.queenAction?`<span class="tag tag-red">対応:${r.queenAction}</span>`:''}
+        ${r.weather?`<span class="tag tag-blue">${r.weather}${r.temp?'・'+r.temp+'℃':''}</span>`:''}
+      </div>
+      ${r.memo?`<div class="log-memo">📝 ${r.memo}</div>`:''}
+    </div>`).join('');
+}
+
+// ===== グラフ =====
+function renderGraph(){
+  const logs=JSON.parse(localStorage.getItem('beeLogs')||'[]');
+  if(!logs.length)return;
+  const filter=document.getElementById('graphBoxFilter');
+  const boxes=[...new Set(logs.map(l=>l.boxNo))].sort((a,b)=>a-b);
+  const cur=filter.value;
+  filter.innerHTML='<option value="all">全巣箱</option>'+boxes.map(b=>`<option value="${b}" ${cur==b?'selected':''}>${b}番</option>`).join('');
+  const sel=filter.value;
+  let filtered=[...logs].filter(l=>sel==='all'||l.boxNo==sel).sort((a,b)=>a.date>b.date?1:-1);
+  const recent=filtered.slice(-30);
+  const labels=recent.map(l=>String(l.date).slice(5));
+  if(broodChartInst) broodChartInst.destroy();
+  broodChartInst=new Chart(document.getElementById('broodChart').getContext('2d'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'育児枠',data:recent.map(l=>Number(l.brood)||0),borderColor:'#E8930A',backgroundColor:'rgba(232,147,10,0.10)',borderWidth:2.5,pointBackgroundColor:'#E8930A',pointRadius:4,tension:.3,fill:true},
+      {label:'蜜枠',  data:recent.map(l=>Number(l.honey)||0),borderColor:'#2E7D32',backgroundColor:'rgba(46,125,50,0.07)',borderWidth:2,pointBackgroundColor:'#2E7D32',pointRadius:4,tension:.3,fill:true}
+    ]},
+    options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:12}}}},scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}},x:{ticks:{font:{size:10},maxRotation:45}}}}
+  });
+  if(boxBarChartInst) boxBarChartInst.destroy();
+  const latest={};
+  logs.forEach(l=>{if(!latest[l.boxNo]||l.date>latest[l.boxNo].date)latest[l.boxNo]=l;});
+  const bKeys=Object.keys(latest).sort((a,b)=>a-b);
+  const bData=bKeys.map(k=>Number(latest[k].brood)||0);
+  const bColors=bData.map(v=>v>=6?'#2E7D32':v>=3?'#E8930A':'#C0392B');
+  boxBarChartInst=new Chart(document.getElementById('boxBarChart').getContext('2d'),{
+    type:'bar',
+    data:{labels:bKeys.map(k=>`${k}番`),datasets:[{label:'育児枠',data:bData,backgroundColor:bColors,borderRadius:6,borderSkipped:false}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'rgba(0,0,0,0.04)'}}}}
+  });
+}
+
+// ===== 女王サマリー =====
+function renderQueenSummary(){
+  const logs=JSON.parse(localStorage.getItem('beeLogs')||'[]');
+  const latest={};
+  logs.forEach(l=>{if(!latest[l.boxNo]||l.date>latest[l.boxNo].date)latest[l.boxNo]=l;});
+  const boxes=Object.keys(latest).sort((a,b)=>a-b);
+  if(!boxes.length){document.getElementById('queenSummary').innerHTML='<div style="color:#C8A96A;text-align:center;padding:16px;font-size:13px">データがありません</div>';return;}
+  const nestIcon={'良好':'✅','進捗無し':'➡️','悪化':'⚠️'};
+  const rows=boxes.map(b=>{
+    const r=latest[b];
+    const qI=r.queen==='あり'?'✅':r.queen==='なし'?'❌':'—';
+    const eI=r.egg==='あり'?'✅':r.egg==='なし'?'❌':'—';
+    const nest=r.nestCondition?(nestIcon[r.nestCondition]||r.nestCondition):'—';
+    const qcB=r.qcell&&r.qcell!=='なし'?`<span style="color:var(--red);font-size:11px">⚠️${r.qcell}</span>`:'—';
+    return`<tr><td style="font-weight:700">${b}番</td><td>${String(r.date).slice(5)}</td><td>${qI}</td><td>${eI}</td><td>${r.brood??'—'}</td><td>${nest}</td><td>${qcB}</td></tr>`;
+  }).join('');
+  document.getElementById('queenSummary').innerHTML=`<table class="summary-table"><thead><tr><th>巣箱</th><th>内見日</th><th>女王</th><th>産卵</th><th>育児枠</th><th>巣盛</th><th>王台</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ===== 女王育成カレンダー =====
+let qcType='';
+function setQcType(type){
+  qcType=type;
+  ['qct_cell','qct_cup','qct_emergency'].forEach(id=>document.getElementById(id).classList.remove('on-sel'));
+  const m={'王台':'qct_cell','王椀':'qct_cup','緊急王台':'qct_emergency'};
+  if(m[type]) document.getElementById(m[type]).classList.add('on-sel');
+}
+function addQueenEvent(){
+  const boxNo=document.getElementById('qcBoxNo').value;
+  const date=document.getElementById('qcDate').value;
+  if(!boxNo||!date){showToast('⚠️ 巣箱Noと日付を入力してください');return;}
+  const events=JSON.parse(localStorage.getItem('queenEvents')||'[]');
+  const entry={id:Date.now(),boxNo,date,qcType:qcType||'王台',memo:document.getElementById('qcMemo').value};
+  events.unshift(entry);
+  localStorage.setItem('queenEvents',JSON.stringify(events));
+  const gasUrl=localStorage.getItem('gasUrl');
+  if(gasUrl) fetch(gasUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({...entry,type:'queen_event',qcDate:date})}).catch(()=>{});
+  showToast('👑 カレンダーに追加しました');
+  document.getElementById('qcBoxNo').value='';document.getElementById('qcMemo').value='';
+  qcType='';['qct_cell','qct_cup','qct_emergency'].forEach(id=>document.getElementById(id).classList.remove('on-sel'));
+  renderQueenCalendar();
+}
+function deleteQueenEvent(id){
+  let ev=JSON.parse(localStorage.getItem('queenEvents')||'[]');
+  ev=ev.filter(e=>e.id!=id);
+  localStorage.setItem('queenEvents',JSON.stringify(ev));
+  renderQueenCalendar();
+}
+function renderQueenCalendar(){
+  const events=JSON.parse(localStorage.getItem('queenEvents')||'[]');
+  const el=document.getElementById('queenCalendarList');
+  if(!events.length){el.innerHTML='<div style="text-align:center;padding:40px;color:#C8A96A;font-size:14px">王台記録がありません</div>';return;}
+  const today=new Date();today.setHours(0,0,0,0);
+  el.innerHTML=events.map(ev=>{
+    const base=new Date(ev.date);
+    const tl=[{label:'王台確認',offset:0,icon:'🔍'},{label:'羽化予定',offset:8,icon:'🐝'},{label:'交尾飛行予定',offset:15,icon:'✈️'},{label:'産卵開始予定',offset:22,icon:'🥚'}];
+    const rows=tl.map(t=>{
+      const dt=new Date(base);dt.setDate(base.getDate()+t.offset);dt.setHours(0,0,0,0);
+      const diff=Math.round((dt-today)/86400000);
+      let cls='future',dot='dot-future',cd='';
+      if(diff<0){cls='done';dot='dot-done';cd=`${Math.abs(diff)}日前`;}
+      else if(diff===0){cls='today';dot='dot-today';cd='今日！';}
+      else if(diff<=3){cls='soon';dot='dot-soon';cd=`あと${diff}日`;}
+      else{cd=`あと${diff}日`;}
+      return`<div class="qc-event ${cls}"><div class="qc-dot ${dot}"></div><div class="qc-date">${dt.getMonth()+1}/${dt.getDate()}</div><div class="qc-label">${t.icon} ${t.label}</div><div class="qc-countdown">${cd}</div></div>`;
+    }).join('');
+    const isPast=new Date(ev.date)<new Date(today.getTime()-25*86400000);
+    return`<div class="qc-card ${isPast?'past':''}"><div class="qc-header"><div><div class="qc-box">🐝 ${ev.boxNo}番巣箱</div><div style="font-size:12px;color:var(--soft);margin-top:2px">${ev.qcType||'王台'} 確認：${ev.date}${ev.memo?' ・'+ev.memo:''}</div></div><button class="qc-delete" onclick="deleteQueenEvent(${ev.id})">✕</button></div><div class="qc-timeline">${rows}</div></div>`;
+  }).join('');
+}
+
+// ===== 設定保存 =====
+function saveApiKey2(){const v=document.getElementById('apiKeyInput2').value.trim();if(v){localStorage.setItem('claudeApiKey',v);showToast('✅ APIキー保存');}}
+function saveGasUrl2(){const v=document.getElementById('gasUrlInput2').value.trim();if(v){localStorage.setItem('gasUrl',v);showToast('✅ GAS URL保存');}}
+
+// ===== トースト =====
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+// ===== GASコードコピー =====
+function copyGasCode(){navigator.clipboard.writeText(getGasCode()).then(()=>showToast('✅ コードをコピーしました'));}
+
+// ===== GASコード =====
+function getGasCode(){
+return `// 養蜂内見記録 - Google Apps Script 完全版
+const SPREADSHEET_ID = 'ここにスプレッドシートIDを貼り付け';
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+    if (data.type === 'queen_event') {
+      let qs = ss.getSheetByName('女王育成') || ss.insertSheet('女王育成');
+      if (qs.getLastRow() === 0) {
+        qs.appendRow(['巣箱No','王台確認日','王台タイプ','羽化予定日','交尾飛行予定','産卵開始予定','メモ','登録日時']);
+        qs.getRange(1,1,1,8).setBackground('#B56D00').setFontColor('#fff').setFontWeight('bold');
+      }
+      const d = new Date(data.qcDate);
+      const hatch = new Date(d); hatch.setDate(d.getDate()+8);
+      const mate  = new Date(d); mate.setDate(d.getDate()+15);
+      const lay   = new Date(d); lay.setDate(d.getDate()+22);
+      const fmt = dt => Utilities.formatDate(dt,'Asia/Tokyo','yyyy/MM/dd');
+      qs.appendRow([data.boxNo,fmt(d),data.qcType||'王台',fmt(hatch),fmt(mate),fmt(lay),data.memo||'',new Date()]);
+      return ContentService.createTextOutput(JSON.stringify({status:'ok'})).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    let sheet = ss.getSheetByName('内見ログ') || ss.insertSheet('内見ログ');
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(['内見日','巣箱No','段数','女王','産卵','育児枠','蜜枠','巣盛','給餌','デマリー','王台状況','女王なし対応','天気','気温(℃)','その他メモ','送信日時']);
+      sheet.getRange(1,1,1,16).setBackground('#E8930A').setFontColor('#fff').setFontWeight('bold');
+    }
+    sheet.appendRow([
+      data.date, data.boxNo, data.stage, data.queen, data.egg,
+      data.brood||0, data.honey||0,
+      data.nestCondition||'', data.feeding||'',
+      data.demary||'', data.qcell||'', data.queenAction||'',
+      data.weather||'', data.temp||'',
+      data.memo||'', new Date()
+    ]);
+    return ContentService.createTextOutput(JSON.stringify({status:'ok'})).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({status:'error',msg:err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const result = {};
+  ['内見ログ','女王育成'].forEach(name => {
+    const s = ss.getSheetByName(name);
+    if (s) result[name] = s.getDataRange().getValues();
+  });
+  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+}`;
+}
+</script>
+</body>
+</html>
